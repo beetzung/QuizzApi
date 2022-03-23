@@ -49,7 +49,6 @@ class Game:
         return "TODO"
 
     def begin(self):
-        # TODO add questions
         self.status = STATUS_STARTED
 
     def get_player_names(self):
@@ -60,7 +59,7 @@ class Game:
 
     def check_remaining_questions(self, player: Player):
         player = self.players[player.token]
-        return player.current_question <= len(self.question_ids)
+        return player.current_question < len(self.question_ids)
 
     def get_next_question_id(self, player: Player):
         player = self.players[player.token]
@@ -72,6 +71,10 @@ class Game:
         if question.check_answer(answer):
             player.score += question.score
             return True
+
+        all_finished = True
+        for player in self.players.values():
+            if player.current_question
         return False
 
     def to_dict(self):
