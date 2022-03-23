@@ -51,6 +51,10 @@ class Game:
         # TODO add questions
         self.status = STATUS_STARTED
 
+    def get_player_names(self):
+        return [player.name for player in self.players.values()]
+
+
     def to_dict(self):
         print(self.players)
         return {

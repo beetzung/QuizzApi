@@ -77,11 +77,20 @@ def status():
     if not game.check_user(token):
         return make_response(error='Access denied')
     if game.is_created():
-        return make_response(status_='created')
+        return make_response(status_='created', data={
+            'players': game.get_player_names()
+        })
     elif game.is_finished():
-        return make_response(status_='finished', data={'winner': game.get_winner(), 'score': game.get_scoretable()})
+        return make_response(status_='finished', data={
+            'players': game.get_player_names(),
+            'winner': game.get_winner(),
+            'score': game.get_scoretable()
+        })
     elif game.is_started():
-        return make_response(status_='started', data={'question': 'TODO', 'players': game.get_scoretable()})
+        return make_response(status_='started', data={
+            'question': 'TODO',
+            'players': game.get_scoretable()
+        })
 
 
 def make_response(status_=None, error=None, data=None):
