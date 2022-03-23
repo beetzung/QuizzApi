@@ -28,7 +28,7 @@ class Question:
 def load_question_from_dict(question_dict: dict) -> Question:
     return Question(
         question_dict['text'],
-        question_dict['answer'],
+        question_dict['correct'],
         question_dict['category'],
         question_dict['score'],
         question_dict['options']
