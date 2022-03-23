@@ -75,6 +75,7 @@ def status():
         return make_response(error='No such game')
     data = read_data(password)
     game = load_game_from_dict(data)
+    game.check_game()
     if not game.check_user(token):
         return make_response(error='Access denied')
     player = game.get_player_by_token(token)
@@ -120,6 +121,7 @@ def answer():
         return make_response(error='No such game')
     data = read_data(password)
     game = load_game_from_dict(data)
+    game.check_game()
     if not game.check_user(token):
         return make_response(error='Access denied')
     player = game.get_player_by_token(token)

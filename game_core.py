@@ -71,7 +71,10 @@ class Game:
         if question.check_answer(answer):
             player.score += question.score
             return True
+        self.check_game()
+        return False
 
+    def check_game(self):
         all_finished = True
         for player in self.players.values():
             if player.current_question != len(self.question_ids):
@@ -79,7 +82,6 @@ class Game:
                 break
         if all_finished:
             self.finish()
-        return False
 
     def finish(self):
         self.status = STATUS_FINISHED
