@@ -25,7 +25,7 @@ class Question:
         }
 
 
-def from_dict(question_dict: dict) -> Question:
+def load_question_from_dict(question_dict: dict) -> Question:
     return Question(
         question_dict['text'],
         question_dict['answer'],

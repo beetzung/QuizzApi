@@ -1,4 +1,5 @@
 from player import Player, load_players_from_dict, save_players_to_dict, load_player_from_dict
+from question import Question
 
 STATUS_CREATED = 'created'
 STATUS_STARTED = 'started'
@@ -54,6 +55,24 @@ class Game:
     def get_player_names(self):
         return [player.name for player in self.players.values()]
 
+    def get_player_by_token(self, token: str):
+        return self.players[token]
+
+    def check_remaining_questions(self, player: Player):
+        player = self.players[player.token]
+        return player.current_question <= len(self.question_ids)
+
+    def get_next_question_id(self, player: Player):
+        player = self.players[player.token]
+        return self.question_ids[player.current_question]
+
+    def answer_question(self, player: Player, question: Question, answer: int):
+        player = self.players[player.token]
+        player.current_question += 1
+        if question.check_answer(answer):
+            player.score += question.score
+            return True
+        return False
 
     def to_dict(self):
         print(self.players)

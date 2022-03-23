@@ -37,3 +37,11 @@ def get_question_ids():
     with open('quizz.json') as json_file:
         data = json.load(json_file)
         return random.sample(data.keys(), QUESTIONS_NUMBER)
+
+
+# gets question from json
+def get_question(id):
+    # read json file
+    with open('quizz.json') as json_file:
+        data = json.load(json_file)
+    return data[id]
