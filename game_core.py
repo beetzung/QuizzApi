@@ -74,8 +74,15 @@ class Game:
 
         all_finished = True
         for player in self.players.values():
-            if player.current_question
+            if player.current_question != len(self.question_ids):
+                all_finished = False
+                break
+        if all_finished:
+            self.finish()
         return False
+
+    def finish(self):
+        self.status = STATUS_FINISHED
 
     def to_dict(self):
         print(self.players)
