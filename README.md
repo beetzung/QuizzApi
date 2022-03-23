@@ -89,3 +89,45 @@ token - токен игрока
 ```
 question может быть Null если все вопросы отвечены
 
+## Ответить на вопрос
+> https://quiz.beetzung.com/answer?token={token}&password={password}&answer={answer}
+
+**token** - Токен админа
+**password** - пароль комнаты
+**answer** - ответ на вопрос
+
+Пример ответа:
+
+```
+{
+  "data": {
+    "players": [
+      "Anton",
+      "test"
+    ],
+    "question": {
+      "answers": {
+        "1": "1909",
+        "2": "1914",
+        "3": "1919"
+      },
+      "text": "В каком году началась первая мировая война?"
+    },
+    "score": [
+      [
+        "Anton",
+        0
+      ],
+      [
+        "test",
+        0
+      ]
+    ],
+    "winner": "TODO"
+  },
+  "error": null,
+  "status": "answer_correct"
+}
+```
+question может быть Null если все вопросы отвечены
+status - answer_correct или answer_incorrect

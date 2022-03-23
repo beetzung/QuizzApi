@@ -134,9 +134,9 @@ def answer():
             question = load_question_from_dict(get_question(game.get_next_question_id(player)))
             next_q = None
             if game.answer_question(player, question, user_answer):
-                answer_status = 'anserred_correct'
+                answer_status = 'answer_correct'
             else:
-                answer_status = 'anserred_incorrect'
+                answer_status = 'answer_incorrect'
             if game.check_remaining_questions(player):
                 next_question = load_question_from_dict(get_question(game.get_next_question_id(player)))
                 next_q = {'text': next_question.text, 'answers': next_question.options}
