@@ -77,7 +77,7 @@ def status():
     game = load_game_from_dict(data)
     if not game.check_user(token):
         return make_response(error='Access denied')
-    player = game.get_player(token)
+    player = game.get_player_by_token(token)
     if game.is_created():
         return make_response(status_='created', data={
             'players': game.get_player_names()
