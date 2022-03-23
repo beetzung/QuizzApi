@@ -46,7 +46,7 @@ class Game:
         return [(player.name, player.score) for player in self.players.values()]
 
     def get_winner(self):
-        return max(self.players.values(), key=lambda x: x.score)
+        return "TODO"
 
     def begin(self):
         # TODO add questions
