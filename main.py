@@ -103,6 +103,7 @@ def status():
             })
         else:
             return make_response(status_='started', data={
+                'is_admin': game.check_admin(token),
                 'question': None,
                 'players': game.get_player_names(),
                 'winner': game.get_winner(),
@@ -142,6 +143,7 @@ def answer():
                 next_q = {'text': next_question.text, 'answers': next_question.options}
             save_data(game.to_dict(), password)
             return make_response(status_=answer_status, data={
+                'is_admin': game.check_admin(token),
                 'question': next_q,
                 'players': game.get_player_names(),
                 'winner': game.get_winner(),

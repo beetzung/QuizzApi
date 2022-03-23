@@ -59,6 +59,7 @@ token - токен игрока
 ```
 {
   "data": {
+    "is_admin": game.check_admin(token),
     "players": [
       "Anton",
       "test"
@@ -101,6 +102,7 @@ question может быть Null если все вопросы отвечен�
 ```
 {
   "data": {
+    "is_admin": game.check_admin(token),
     "players": [
       "Anton",
       "test"
