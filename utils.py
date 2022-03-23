@@ -4,6 +4,7 @@ import string
 
 QUESTIONS_NUMBER = 3
 
+
 # generate token
 def generate_random_token():
     return ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(32))

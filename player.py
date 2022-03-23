@@ -21,7 +21,7 @@ def load_player_from_dict(d) -> Player:
     return Player(d["name"], d["token"], d["is_admin"], d["score"])
 
 
-def load_players_from_dict(players_dict: dict) -> dict[str: Player]:
+def load_players_from_dict(players_dict: dict) -> dict:
     players = {}
     for player_dict in players_dict.values():
         player = load_player_from_dict(player_dict)
@@ -29,7 +29,7 @@ def load_players_from_dict(players_dict: dict) -> dict[str: Player]:
     return players
 
 
-def save_players_to_dict(players: dict[str: Player]) -> dict:
+def save_players_to_dict(players: dict) -> dict:
     players_dict = {}
     for player in players.values():
         players_dict[player.token] = player.to_dict()

@@ -6,8 +6,8 @@ STATUS_FINISHED = 'finished'
 
 
 class Game:
-    def __init__(self, name: str, max_players: int, admin: str, version: str, question_ids: list[str],
-                 players: dict[str: Player] = None,
+    def __init__(self, name: str, max_players: int, admin: str, version: str, question_ids: list,
+                 players: dict = None,
                  status=STATUS_CREATED):
         self.name = name
         self.max_players = max_players
