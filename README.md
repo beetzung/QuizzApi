@@ -59,7 +59,8 @@ token - токен игрока
 ```
 {
   "data": {
-    "is_admin": game.check_admin(token),
+    "name": "Anton",
+    "is_admin": true,
     "players": [
       "Anton",
       "test"
@@ -102,8 +103,9 @@ question может быть Null если все вопросы отвечен�
 ```
 {
   "data": {
+    "name": "Anton",
     "answer": "answer_correct",
-    "is_admin": game.check_admin(token),
+    "is_admin": true,
     "players": [
       "Anton",
       "test"
