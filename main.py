@@ -81,11 +81,13 @@ def status():
     player = game.get_player_by_token(token)
     if game.is_created():
         return make_response(status_='created', data={
+            'name': game.get_player_name(token),
             'is_admin': game.check_admin(token),
             'players': game.get_player_names()
         })
     elif game.is_finished():
         return make_response(status_='finished', data={
+            'name': game.get_player_name(token),
             'is_admin': game.check_admin(token),
             'players': game.get_player_names(),
             'winner': game.get_winner(),
@@ -95,6 +97,7 @@ def status():
         if game.check_remaining_questions(player):
             question = load_question_from_dict(get_question(game.get_next_question_id(player)))
             return make_response(status_='started', data={
+                'name': game.get_player_name(token),
                 'is_admin': game.check_admin(token),
                 'question': {
                     'text': question.text,
@@ -106,6 +109,7 @@ def status():
             })
         else:
             return make_response(status_='started', data={
+                'name': game.get_player_name(token),
                 'is_admin': game.check_admin(token),
                 'question': None,
                 'players': game.get_player_names(),
@@ -147,6 +151,7 @@ def answer():
                 next_q = {'text': next_question.text, 'answers': next_question.options}
             save_data(game.to_dict(), password)
             return make_response(status_=game.get_status(), data={
+                'name': game.get_player_name(token),
                 'answer': answer_status,
                 'is_admin': game.check_admin(token),
                 'question': next_q,

@@ -30,6 +30,9 @@ class Game:
     def get_status(self):
         return self.status
 
+    def get_player_name(self, token: str):
+        return self.players[token].name
+
     def check_available_players(self):
         return len(self.players) < self.max_players
 
