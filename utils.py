@@ -4,6 +4,7 @@ import string
 
 QUESTIONS_NUMBER = 3
 
+
 # generate token
 def generate_random_token():
     return ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(32))
@@ -36,3 +37,11 @@ def get_question_ids():
     with open('quizz.json') as json_file:
         data = json.load(json_file)
         return random.sample(data.keys(), QUESTIONS_NUMBER)
+
+
+# gets question from json
+def get_question(id):
+    # read json file
+    with open('quizz.json') as json_file:
+        data = json.load(json_file)
+    return data[id]
