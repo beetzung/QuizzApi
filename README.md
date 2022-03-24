@@ -102,6 +102,7 @@ question может быть Null если все вопросы отвечен�
 ```
 {
   "data": {
+    "answer": "answer_correct",
     "is_admin": game.check_admin(token),
     "players": [
       "Anton",
@@ -128,8 +129,8 @@ question может быть Null если все вопросы отвечен�
     "winner": "TODO"
   },
   "error": null,
-  "status": "answer_correct"
+  "status": "started"
 }
 ```
 question может быть Null если все вопросы отвечены
-status - answer_correct или answer_incorrect
+answer - answer_correct или answer_incorrect

@@ -138,6 +138,7 @@ def answer():
             question = load_question_from_dict(get_question(game.get_next_question_id(player)))
             next_q = None
             if game.answer_question(player, question, user_answer):
+
                 answer_status = 'answer_correct'
             else:
                 answer_status = 'answer_incorrect'
@@ -145,7 +146,8 @@ def answer():
                 next_question = load_question_from_dict(get_question(game.get_next_question_id(player)))
                 next_q = {'text': next_question.text, 'answers': next_question.options}
             save_data(game.to_dict(), password)
-            return make_response(status_=answer_status, data={
+            return make_response(status_=game.get_status(), data={
+                'answer': answer_status,
                 'is_admin': game.check_admin(token),
                 'question': next_q,
                 'players': game.get_player_names(),

@@ -27,6 +27,9 @@ class Game:
     def is_finished(self):
         return self.status == STATUS_FINISHED
 
+    def get_status(self):
+        return self.status
+
     def check_available_players(self):
         return len(self.players) < self.max_players
 
