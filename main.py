@@ -107,6 +107,7 @@ def status():
     elif game.is_started():
         if game.check_remaining_questions(player):
             question = load_question_from_dict(get_question(game.get_next_question_id(player)))
+            print(question.to_dict())
             return make_response(status_='started', data={
                 'name': game.get_player_name(token),
                 'is_admin': game.check_admin(token),
