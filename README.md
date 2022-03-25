@@ -43,10 +43,7 @@ token - токен игрока
 **password** - пароль комнаты
 
 Пример ответа:
-
-    {
-      "status": "started"
-    }
+такой же как и в /game
 
 ## Проверить игру
 > https://quiz.beetzung.com/game?token={token}&password={password}

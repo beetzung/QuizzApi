@@ -60,7 +60,18 @@ def begin():
     if game.check_admin(token):
         game.begin()
         save_data(game.to_dict(), password)
-        return make_response(status_='started')
+        question = load_question_from_dict(get_question(game.get_next_question_id(game.get_player_by_token(token))))
+        return make_response(status_='started', data={
+            'name': game.get_player_name(token),
+            'is_admin': game.check_admin(token),
+            'question': {
+                'text': question.text,
+                'answers': question.options
+            },
+            'players': game.get_player_names(),
+            'winner': game.get_winner(),
+            'score': game.get_scoretable()
+        })
     else:
         return make_response(error='Not admin')
 
