@@ -48,7 +48,7 @@ token - токен игрока
 ## Проверить игру
 > https://quiz.beetzung.com/game?token={token}&password={password}
 
-**token** - Токен админа
+**token** - Токен игрока
 **password** - пароль комнаты
 
 Пример ответа:
