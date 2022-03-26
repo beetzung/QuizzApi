@@ -1,3 +1,5 @@
+import argparse
+
 from flask import Flask, request, jsonify
 from markupsafe import escape
 
@@ -154,7 +156,6 @@ def answer():
             question = load_question_from_dict(get_question(game.get_next_question_id(player)))
             next_q = None
             if game.answer_question(player, question, user_answer):
-
                 answer_status = 'answer_correct'
             else:
                 answer_status = 'answer_incorrect'
@@ -176,8 +177,19 @@ def answer():
 
 
 def make_response(status_=None, error=None, data=None):
+    print(status_, error, data)
     return jsonify({'status': status_, 'error': error, 'data': data})
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=443, ssl_context=('cert.pem', 'key.pem'))
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-p', '--production', action='store_true',
+                        help='Run in production mode (must have SSL cert.pem and key.pem')
+    parser.add_argument('-d', '--debug', action='store_true', help='Run in debug mode (localhost)')
+    args = parser.parse_args()
+    if args.production:
+        app.run(host='0.0.0.0', port=443, ssl_context=('cert.pem', 'key.pem'))
+    elif args.debug:
+        app.run(host='0.0.0.0', port=80)
+    else:
+        print('Specify either --production or --debug')
