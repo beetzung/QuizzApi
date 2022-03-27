@@ -40,8 +40,8 @@ def get_question_ids():
 
 
 # gets question from json
-def get_question(id):
+def get_question(q_id):
     # read json file
     with open('quizz.json') as json_file:
         data = json.load(json_file)
-    return data[id]
+    return data[q_id]

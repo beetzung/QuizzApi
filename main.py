@@ -1,16 +1,140 @@
 import argparse
+import json
 
 from flask import Flask, request, jsonify
+from flask_socketio import SocketIO, join_room, leave_room
+from flask_socketio import emit
 from markupsafe import escape
 
 from game_core import Game, load_game_from_dict
 from player import Player
-from question import Question, load_question_from_dict
+from question import load_question_from_dict
 from utils import generate_random_token, save_data, read_data, check_file, get_question_ids, get_question
 
-SUBDOMAIN = 'game'
+HOST = "0.0.0.0"
+PORT = 80
 VERSION = '1.0'
 app = Flask(__name__)
+socket = SocketIO(app)
+
+
+@socket.on('connect_to_game')
+def connect(json_string):
+    data = json.loads(json_string)
+    password = escape(data['password'])
+    token = escape(data['token'])
+    if not check_file(password):
+        get_response_dict(error='No such game')
+        return
+    game = load_game_from_dict(read_data(password))
+    if not game.check_user(token):
+        get_response_dict(error='Access denied')
+        return
+    join_room(password)
+    print(f"Client {request.remote_addr} subscribed to {password}")
+    # # socket.emit("game", get_game_data(password), to=password)
+    # emit("game", get_game_data(password))
+    # emit("question", get_question_data(password, token))
+
+
+@socket.on('disconnect_from_game')
+def disconnect(json_string):
+    data = json.loads(json_string)
+    password = escape(data('password'))
+    leave_room(password)
+    print(f"Client {request.remote_addr} unsubscribed from {password}")
+    # emit("game", get_game_data(password), to=password)
+
+
+@socket.on('request')
+def request_question(json_string):
+    data = json.loads(json_string)
+    password = escape(data['password'])
+    token = escape(data['token'])
+    print(f"Client {request.remote_addr} requesting info for {password}")
+    emit("game", get_response_dict(
+        data=get_game_data(password),
+        status_=get_game_status(password)
+    ))
+    emit("question", get_response_dict(status_=get_game_status(password), data=get_question_data(password, token)))
+
+
+@socket.on('start')  # , subdomain=SUBDOMAIN)
+def begin(json_string):
+    data = json.loads(json_string)
+    password = escape(data['password'])
+    token = escape(data['token'])
+    if check_file(password):
+        pass
+    else:
+        emit("game", get_response_dict(error='No such game'))
+    data = read_data(password)
+    game = load_game_from_dict(data)
+    if not game.is_created():
+        emit("game", get_response_dict(error='Game already started or finished'))
+    if game.check_admin(token):
+        game.begin()
+        save_data(game.to_dict(), password)
+        print(f'Client {request.remote_addr} started game {password}')
+        socket.emit("game", get_response_dict(
+            data=get_game_data(password),
+            status_=get_game_status(password)
+        ), to=password)
+        emit("question", get_response_dict(status_=get_game_status(password), data=get_question_data(password, token)))
+    else:
+        emit("game", get_response_dict(error='Access denied'))
+
+
+@socket.on('answer')  # , subdomain=SUBDOMAIN)
+def answer(json_string):
+    data = json.loads(json_string)
+    password = escape(data['password'])
+    token = escape(data['token'])
+
+    # adding plus one because answer ids starts from 1
+    user_answer = data['answer'] + 1
+
+    if check_file(password):
+        pass
+    else:
+        emit("game", get_response_dict(error='No such game'))
+    data = read_data(password)
+    game = load_game_from_dict(data)
+    if not game.check_user(token):
+        emit("game", get_response_dict(error='Access denied'))
+    if game.is_created():
+        emit("game", get_response_dict(error='Game not finished'))
+    elif game.is_finished():
+        emit("game", get_response_dict(error='Game already finished'))
+    elif game.is_started():
+        if game.check_remaining_questions(token):
+            question = load_question_from_dict(get_question(game.get_next_question_id(token)))
+            if game.answer_question(token, user_answer, get_question):
+                answered_correctly = True
+            else:
+                answered_correctly = False
+            save_data(game.to_dict(), password)
+            print(
+                f"Client {request.remote_addr} answered question for {password}, answer={user_answer}" +
+                f"correct={question.answer}")
+            response = get_response_dict(
+                status_=game.get_status(),
+                data=get_question_data(password, token, answer_status=answered_correctly)
+            )
+            emit("question", response)
+            socket.emit("game", get_response_dict(game.get_status(), data=get_game_data(password)), to=password)
+        else:
+            emit("game", get_response_dict(error='No more questions'))
+
+
+@socket.on('connect')
+def test_connect(auth):
+    print(f"Client {request.remote_addr} connected with auth {auth}")
+
+
+@socket.on('disconnect')
+def test_disconnect():
+    print(f"Client {request.remote_addr} disconnected")
 
 
 @app.route('/create')  # , subdomain=SUBDOMAIN)
@@ -22,7 +146,8 @@ def create():
     admin = Player(name, token)
     game = Game(password, players, token, VERSION, get_question_ids(), {token: admin})
     save_data(game.to_dict(), password)
-    return make_response(status_="created", data={'token': token, 'password': password})
+    print(f"Client {request.remote_addr} created game {password}")
+    return jsonify(get_response_dict(status_="created", data={'token': token, 'password': password}))
 
 
 @app.route('/join')  # , subdomain=SUBDOMAIN)
@@ -32,7 +157,7 @@ def join():
     if check_file(password):
         pass
     else:
-        return make_response(error='No such game')
+        return jsonify(get_response_dict(error='No such game'))
     game = load_game_from_dict(read_data(password))
 
     if game.is_created():
@@ -40,156 +165,62 @@ def join():
             token = generate_random_token()
             game.add_player(name, token)
             save_data(game.to_dict(), password)
-            return make_response(status_='joined', data={'token': token})
+            print(f"Client {request.remote_addr} joined game {password}")
+            return jsonify(get_response_dict(status_='joined', data={'token': token}))
         else:
-            return make_response(error='room is full')
+            return jsonify(get_response_dict(error='room is full'))
     else:
-        return make_response(error='Game already started or finished')
+        return jsonify(get_response_dict(error='Game already started or finished'))
 
 
-@app.route('/start')  # , subdomain=SUBDOMAIN)
-def begin():
-    password = escape(request.args.get('password'))
-    token = escape(request.args.get('token'))
-    if check_file(password):
-        pass
-    else:
-        return make_response(error='No such game')
-    data = read_data(password)
-    game = load_game_from_dict(data)
-    if not game.is_created():
-        return make_response(error='Game already started or finished')
-    if game.check_admin(token):
-        game.begin()
-        save_data(game.to_dict(), password)
-        question = load_question_from_dict(get_question(game.get_next_question_id(game.get_player_by_token(token))))
-        return make_response(status_='started', data={
-            'name': game.get_player_name(token),
-            'is_admin': game.check_admin(token),
-            'question': {
-                'text': question.text,
-                'answers': question.options
-            },
-            'players': game.get_player_names(),
-            'winner': game.get_winner(),
-            'score': game.get_scoretable()
-        })
-    else:
-        return make_response(error='Not admin')
+def get_game_data(password):
+    game = load_game_from_dict(read_data(password))
+    return {
+        'players': game.get_player_names(),
+        'winner': game.get_winner(),
+        'score': game.get_scoretable()
+    }
 
 
-@app.route('/game')  # , subdomain=SUBDOMAIN)
-def status():
-    password = escape(request.args.get('password'))
-    token = escape(request.args.get('token'))
-    if check_file(password):
-        pass
-    else:
-        return make_response(error='No such game')
-    data = read_data(password)
-    game = load_game_from_dict(data)
-    game.check_game()
-    if not game.check_user(token):
-        return make_response(error='Access denied')
-    player = game.get_player_by_token(token)
-    if game.is_created():
-        return make_response(status_='created', data={
-            'name': game.get_player_name(token),
-            'is_admin': game.check_admin(token),
-            'players': game.get_player_names()
-        })
-    elif game.is_finished():
-        return make_response(status_='finished', data={
-            'name': game.get_player_name(token),
-            'is_admin': game.check_admin(token),
-            'players': game.get_player_names(),
-            'winner': game.get_winner(),
-            'score': game.get_scoretable()
-        })
-    elif game.is_started():
-        if game.check_remaining_questions(player):
-            question = load_question_from_dict(get_question(game.get_next_question_id(player)))
-            print(question.to_dict())
-            return make_response(status_='started', data={
-                'name': game.get_player_name(token),
-                'is_admin': game.check_admin(token),
-                'question': {
-                    'text': question.text,
-                    'answers': question.options
-                },
-                'players': game.get_player_names(),
-                'winner': game.get_winner(),
-                'score': game.get_scoretable()
-            })
-        else:
-            return make_response(status_='started', data={
-                'name': game.get_player_name(token),
-                'is_admin': game.check_admin(token),
-                'question': None,
-                'players': game.get_player_names(),
-                'winner': game.get_winner(),
-                'score': game.get_scoretable()
-            })
+def get_game_status(password):
+    game = load_game_from_dict(read_data(password))
+    return game.get_status()
 
 
-@app.route('/answer')  # , subdomain=SUBDOMAIN)
-def answer():
-    password = escape(request.args.get('password'))
-    token = escape(request.args.get('token'))
-    user_answer = int(escape(request.args.get('answer')))
-    if check_file(password):
-        pass
-    else:
-        return make_response(error='No such game')
-    data = read_data(password)
-    game = load_game_from_dict(data)
-    game.check_game()
-    if not game.check_user(token):
-        return make_response(error='Access denied')
-    player = game.get_player_by_token(token)
-    if game.is_created():
-        return make_response(error='Game not started')
-    elif game.is_finished():
-        return make_response(error='Game already finished')
-    elif game.is_started():
-        if game.check_remaining_questions(player):
-            question = load_question_from_dict(get_question(game.get_next_question_id(player)))
-            next_q = None
-            if game.answer_question(player, question, user_answer):
-                answer_status = 'answer_correct'
-            else:
-                answer_status = 'answer_incorrect'
-            if game.check_remaining_questions(player):
-                next_question = load_question_from_dict(get_question(game.get_next_question_id(player)))
-                next_q = {'text': next_question.text, 'answers': next_question.options}
-            save_data(game.to_dict(), password)
-            return make_response(status_=game.get_status(), data={
-                'name': game.get_player_name(token),
-                'answer': answer_status,
-                'is_admin': game.check_admin(token),
-                'question': next_q,
-                'players': game.get_player_names(),
-                'winner': game.get_winner(),
-                'score': game.get_scoretable()
-            })
-        else:
-            return make_response(error='No more questions')
+def get_question_data(password, token, answer_status=None):
+    game = load_game_from_dict(read_data(password))
+    data = {
+        'name': game.get_player_name(token),
+        'is_admin': game.check_admin(token),
+        'question': game.get_question_dict(token, get_question),
+        "answered_correctly": answer_status
+    }
+    print(data)
+    return data
 
 
-def make_response(status_=None, error=None, data=None):
-    print(status_, error, data)
-    return jsonify({'status': status_, 'error': error, 'data': data})
+def get_response_dict(status_=None, data=None, error=None):
+    d = {
+        "status": status_,
+        "data": data,
+        "error": error
+    }
+    return d
+
+
+def main():
+    print('Server started')
+    socket.run(app, host=HOST, port=PORT)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-p', '--production', action='store_true',
                         help='Run in production mode (must have SSL cert.pem and key.pem')
-    parser.add_argument('-d', '--debug', action='store_true', help='Run in debug mode (localhost)')
     args = parser.parse_args()
     if args.production:
-        app.run(host='0.0.0.0', port=443, ssl_context=('cert.pem', 'key.pem'))
-    elif args.debug:
-        app.run(host='0.0.0.0', port=80)
+        socket.run(app, host='0.0.0.0', port=443, ssl_context=('cert.pem', 'key.pem'))
     else:
-        print('Specify either --production or --debug')
+        socket.run(app, host='0.0.0.0', port=80)
+        # socket_server.main()
+        # socket.run(app, host='0.0.0.0', port=80)

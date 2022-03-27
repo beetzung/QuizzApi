@@ -1,5 +1,5 @@
-from player import Player, load_players_from_dict, save_players_to_dict, load_player_from_dict
-from question import Question
+from player import Player, load_players_from_dict, save_players_to_dict
+from question import load_question_from_dict
 
 STATUS_CREATED = 'created'
 STATUS_STARTED = 'started'
@@ -17,6 +17,7 @@ class Game:
         self.status = status
         self.version = version
         self.question_ids = question_ids
+        self.check_game()
 
     def is_created(self):
         return self.status == STATUS_CREATED
@@ -27,20 +28,8 @@ class Game:
     def is_finished(self):
         return self.status == STATUS_FINISHED
 
-    def get_status(self):
-        return self.status
-
-    def get_player_name(self, token: str):
-        return self.players[token].name
-
     def check_available_players(self):
         return len(self.players) < self.max_players
-
-    def add_player(self, name: str, token: str):
-        if self.check_available_players():
-            self.players[token] = Player(name, token)
-            return True
-        return False
 
     def check_admin(self, token: str):
         return token == self.admin
@@ -48,14 +37,36 @@ class Game:
     def check_user(self, token: str):
         return token in self.players
 
-    def get_scoretable(self):
-        return [(player.name, player.score) for player in self.players.values()]
+    def check_remaining_questions(self, token: str):
+        player = self.players[token]
+        return player.current_question < len(self.question_ids)
+
+    def get_status(self):
+        return self.status
+
+    def get_player_name(self, token: str):
+        return self.players[token].name
 
     def get_winner(self):
         return "TODO"
 
-    def begin(self):
-        self.status = STATUS_STARTED
+    def get_scoretable(self):
+        table = []
+        for player in self.players.values():
+            table.append({
+                'name': player.name,
+                'score': player.score
+            })
+        return table
+
+    def get_question_dict(self, token: str, func):
+        if not self.check_remaining_questions(token):
+            return None
+        question = load_question_from_dict(func(self.get_next_question_id(token)))
+        answers = []
+        for answer in question.options.values():
+            answers.append(answer)
+        return {'text': question.text, 'answers': answers}
 
     def get_player_names(self):
         return [player.name for player in self.players.values()]
@@ -63,22 +74,9 @@ class Game:
     def get_player_by_token(self, token: str):
         return self.players[token]
 
-    def check_remaining_questions(self, player: Player):
-        player = self.players[player.token]
-        return player.current_question < len(self.question_ids)
-
-    def get_next_question_id(self, player: Player):
-        player = self.players[player.token]
+    def get_next_question_id(self, token: str):
+        player = self.players[token]
         return self.question_ids[player.current_question]
-
-    def answer_question(self, player: Player, question: Question, answer: int):
-        player = self.players[player.token]
-        player.current_question += 1
-        if question.check_answer(answer):
-            player.score += question.score
-            return True
-        self.check_game()
-        return False
 
     def check_game(self):
         all_finished = True
@@ -89,11 +87,31 @@ class Game:
         if all_finished:
             self.finish()
 
+    def add_player(self, name: str, token: str):
+        if self.check_available_players():
+            self.players[token] = Player(name, token)
+            return True
+        return False
+
+    def begin(self):
+        self.status = STATUS_STARTED
+
+    def answer_question(self, token: str, answer: int, func):
+        player = self.players[token]
+        question = load_question_from_dict(func(self.get_next_question_id(token)))
+        player.current_question += 1
+        if question.check_answer(answer):
+            player.score += question.score
+            result = True
+        else:
+            result = False
+        self.check_game()
+        return result
+
     def finish(self):
         self.status = STATUS_FINISHED
 
     def to_dict(self):
-        print(self.players)
         return {
             'name': self.name,
             'max_players': self.max_players,

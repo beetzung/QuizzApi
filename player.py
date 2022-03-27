@@ -1,6 +1,3 @@
-import json
-
-
 class Player:
     def __init__(self, name: str, token: str, admin=False, score=0, current_question=0):
         self.name = name
