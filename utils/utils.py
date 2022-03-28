@@ -34,7 +34,7 @@ def check_file(name):
 
 # gets question ids from json
 def get_question_ids():
-    with open('quizz.json') as json_file:
+    with open('../questions/quizz.json', encoding="utf8") as json_file:
         data = json.load(json_file)
         return random.sample(data.keys(), QUESTIONS_NUMBER)
 
@@ -42,6 +42,6 @@ def get_question_ids():
 # gets question from json
 def get_question(q_id):
     # read json file
-    with open('quizz.json') as json_file:
+    with open('../questions/quizz.json') as json_file:
         data = json.load(json_file)
     return data[q_id]
