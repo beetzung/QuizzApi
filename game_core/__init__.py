@@ -103,7 +103,7 @@ class Game:
         player = self.players[token]
         question = load_question_from_dict(func(self.get_next_question_id(token)))
         player.current_question += 1
-        if question.check_answer(answer):
+        if question.check_answer(answer + 1):
             player.score += question.score
             result = True
         else:

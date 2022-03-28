@@ -7,7 +7,6 @@ from flask_socketio import emit
 from markupsafe import escape
 
 from game_core import Game, load_game_from_dict
-from game_core.question import load_question_from_dict
 from utils import generate_random_token, save_data, read_data, check_file, get_question_ids, get_question
 
 HOST = "0.0.0.0"
@@ -107,15 +106,12 @@ def answer(json_string):
         emit("game", get_response_dict(error='Game already finished'))
     elif game.is_started():
         if game.check_remaining_questions(token):
-            question = load_question_from_dict(get_question(game.get_next_question_id(token)))
             if game.answer_question(token, user_answer, get_question):
                 answered_correctly = True
             else:
                 answered_correctly = False
             save_data(game.to_dict(), password)
-            print(
-                f"Client {request.remote_addr} answered question for {password}, answer={user_answer}" +
-                f"correct={question.answer}")
+            print(f"Client {request.remote_addr} answered question for {password}, answer={user_answer}")
             response = get_response_dict(
                 status_=game.get_status(),
                 data=get_question_data(password, token, answer_status=answered_correctly)
