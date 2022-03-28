@@ -204,4 +204,4 @@ if __name__ == '__main__':
     if args.production:
         socket.run(app, host='0.0.0.0', port=443, ssl_context=('cert.pem', 'key.pem'))
     else:
-        socket.run(app, host='127.0.0.1', port=80)
+        socket.run(app, host='0.0.0.0', port=80)
