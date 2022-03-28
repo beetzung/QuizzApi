@@ -1,5 +1,5 @@
-from player import Player, load_players_from_dict, save_players_to_dict
-from question import load_question_from_dict
+from game_core.player import Player, load_players_from_dict, save_players_to_dict
+from game_core.question import load_question_from_dict
 
 STATUS_CREATED = 'created'
 STATUS_STARTED = 'started'
@@ -9,11 +9,14 @@ STATUS_FINISHED = 'finished'
 class Game:
     def __init__(self, name: str, max_players: int, admin: str, version: str, question_ids: list,
                  players: dict = None,
-                 status=STATUS_CREATED):
+                 status=STATUS_CREATED, admin_name=None, admin_token=None):
         self.name = name
         self.max_players = max_players
         self.admin = admin
-        self.players = players
+        if players is not None:
+            self.players = players
+        else:
+            self.players = {admin_token: Player(admin_name, admin_token)}
         self.status = status
         self.version = version
         self.question_ids = question_ids

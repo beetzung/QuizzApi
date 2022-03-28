@@ -7,8 +7,7 @@ from flask_socketio import emit
 from markupsafe import escape
 
 from game_core import Game, load_game_from_dict
-from player import Player
-from question import load_question_from_dict
+from game_core.question import load_question_from_dict
 from utils import generate_random_token, save_data, read_data, check_file, get_question_ids, get_question
 
 HOST = "0.0.0.0"
@@ -143,8 +142,7 @@ def create():
     name = escape(request.args.get('name'))
     password = generate_random_token()
     token = generate_random_token()
-    admin = Player(name, token)
-    game = Game(password, players, token, VERSION, get_question_ids(), {token: admin})
+    game = Game(password, players, token, VERSION, get_question_ids(), admin_name=name, admin_token=token)
     save_data(game.to_dict(), password)
     print(f"Client {request.remote_addr} created game {password}")
     return jsonify(get_response_dict(status_="created", data={'token': token, 'password': password}))
