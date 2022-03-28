@@ -30,9 +30,6 @@ def connect(json_string):
         return
     join_room(password)
     print(f"Client {request.remote_addr} subscribed to {password}")
-    # # socket.emit("game", get_game_data(password), to=password)
-    # emit("game", get_game_data(password))
-    # emit("question", get_question_data(password, token))
 
 
 @socket.on('disconnect_from_game')
@@ -41,7 +38,6 @@ def disconnect(json_string):
     password = escape(data('password'))
     leave_room(password)
     print(f"Client {request.remote_addr} unsubscribed from {password}")
-    # emit("game", get_game_data(password), to=password)
 
 
 @socket.on('request')
@@ -57,7 +53,7 @@ def request_question(json_string):
     emit("question", get_response_dict(status_=get_game_status(password), data=get_question_data(password, token)))
 
 
-@socket.on('start')  # , subdomain=SUBDOMAIN)
+@socket.on('start')
 def begin(json_string):
     data = json.loads(json_string)
     password = escape(data['password'])
@@ -83,14 +79,12 @@ def begin(json_string):
         emit("game", get_response_dict(error='Access denied'))
 
 
-@socket.on('answer')  # , subdomain=SUBDOMAIN)
+@socket.on('answer')
 def answer(json_string):
     data = json.loads(json_string)
     password = escape(data['password'])
     token = escape(data['token'])
-
-    # adding plus one because answer ids starts from 1
-    user_answer = data['answer'] + 1
+    user_answer = data['answer']
 
     if check_file(password):
         pass
@@ -132,7 +126,7 @@ def test_disconnect():
     print(f"Client {request.remote_addr} disconnected")
 
 
-@app.route('/create')  # , subdomain=SUBDOMAIN)
+@app.route('/create')
 def create():
     players = int(escape(request.args.get('players')))
     name = escape(request.args.get('name'))
@@ -144,7 +138,7 @@ def create():
     return jsonify(get_response_dict(status_="created", data={'token': token, 'password': password}))
 
 
-@app.route('/join')  # , subdomain=SUBDOMAIN)
+@app.route('/join')
 def join():
     password = escape(request.args.get('password'))
     name = escape(request.args.get('name'))
@@ -210,6 +204,4 @@ if __name__ == '__main__':
     if args.production:
         socket.run(app, host='0.0.0.0', port=443, ssl_context=('cert.pem', 'key.pem'))
     else:
-        socket.run(app, host='0.0.0.0', port=80)
-        # socket_server.main()
-        # socket.run(app, host='0.0.0.0', port=80)
+        socket.run(app, host='127.0.0.1', port=80)
