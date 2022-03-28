@@ -206,11 +206,6 @@ def get_response_dict(status_=None, data=None, error=None):
     return d
 
 
-def main():
-    print('Server started')
-    socket.run(app, host=HOST, port=PORT)
-
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-p', '--production', action='store_true',
